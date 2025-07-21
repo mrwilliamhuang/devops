@@ -1,0 +1,42 @@
+pipeline {
+    agent any
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                // 从代码仓库检出代码
+                git '~/repo/mfsapi'
+            }
+        }
+        
+        stage('Build') {
+            steps {
+                // 这里添加构建步骤，例如：
+                sh 'mvn clean package'  // 如果是Java项目
+                // 或
+                sh 'npm install && npm run build'  // 如果是Node.js项目
+            }
+        }
+        
+        stage('Deploy') {
+            steps {
+                // 将构建好的文件复制到生产目录
+                sh 'rsync -avz --delete ~/repo/mfsapi/ ~/production/mfsapi/'
+                
+                // 或者使用更简单的copy命令
+                sh 'cp -R ~/repo/mfsapi/* ~/production/mfsapi/'
+            }
+        }
+    }
+    
+    post {
+        success {
+            // 部署成功后的操作
+            echo '部署成功!'
+        }
+        failure {
+            // 部署失败后的操作
+            echo '部署失败!'
+        }
+    }
+}
