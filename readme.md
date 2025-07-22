@@ -1,20 +1,30 @@
-# 部署指南
+# DevOps 自动化部署指南
 
-## 项目部署结构
+## 项目概述
 
-- `~/production/mfsapi`: 从 `~/repo/mfsapi` 部署
-- `~/production/mfsweb`: 从 `~/repo/mfsweb` 部署
+提供Jenkins自动化管理与部署能力，简化DevOps流程。支持创建Jenkins任务、触发构建、参数化部署等功能。
 
-## Jenkins配置
+## 项目目录结构
 
-### Jenkins任务管理
+```
+.
+├── config.sh                 # Jenkins连接信息和认证凭据配置
+├── deploy.sh                 # 主部署脚本，支持参数化项目部署
+├── env-setup.sh              # 环境设置相关脚本
+├── jenkins.sh                # Jenkins任务管理入口脚本
+└── readme.md                 # 项目文档
+```
 
-支持通过脚本或Jenkins界面创建和管理任务。所有任务配置都集中管理在config.sh中。
+## 快速开始
 
-#### 通过脚本创建任务
+### 环境准备
+1. 安装Java运行时环境
+2. 配置Jenkins CLI
+3. 确保Bash shell可用
 
-使用jenkins.sh脚本创建Jenkins任务：
+### Jenkins配置
 
+#### 创建Jenkins任务
 ```bash
 # 创建deploy-api任务（用于mfsapi项目）
 ./jenkins.sh create-job mfsapi
@@ -23,28 +33,7 @@
 ./jenkins.sh create-job mfsweb
 ```
 
-#### 手动创建任务
-
-也可以在Jenkins界面中手动创建任务，注意配置以下内容：
-
-1. **deploy-api** (用于mfsapi项目)
-   - 关联 `mfsapi` 项目的仓库
-   - 使用 `../devops/Jenkinsfile` 作为流水线定义（相对于仓库根目录）
-   - 配置参数化构建，选择 `PROJECT=mfsapi`
-
-2. **deploy-web** (用于mfsweb项目)
-   - 关联 `mfsweb` 项目的仓库
-   - 使用 `../devops/Jenkinsfile` 作为流水线定义（相对于仓库根目录）
-   - 配置参数化构建，选择 `PROJECT=mfsweb`
-
-### 构建触发方式
-
-支持多种方式触发构建：
-
-1. 在Jenkins界面中手动点击 "Build Now"
-2. 使用命令行触发（需要Jenkins CLI配置）
-3. 使用以下命令通过API触发构建：
-
+#### 触发构建
 ```bash
 # 触发 mfsapi 构建
 ./jenkins.sh trigger mfsapi
@@ -53,114 +42,51 @@
 ./jenkins.sh trigger mfsweb
 ```
 
-### Jenkinsfile管理
+## 部署说明
 
-现在使用统一的Jenkinsfile管理所有项目的构建流程，位于：
-`~/repo/devops/Jenkinsfile`
-
-该文件支持参数化构建，可以通过参数选择部署哪个项目（mfsapi 或 mfsweb）。
-
-### Jenkins脚本说明
-
-Jenkins相关脚本已优化为简洁的模块化结构：
-
-- **[jenkins.sh](file:///home/william/repo/devops/jenkins.sh)**：入口脚本（极简，仅5行）
-- **[jenkins-main.sh](file:///home/william/repo/devops/jenkins-main.sh)**：主控制器（<30行）
-- **[jenkins-common.sh](file:///home/william/repo/devops/jenkins-common.sh)**：公共函数和配置加载
-- **[jenkins-create-job.sh](file:///home/william/repo/devops/jenkins-create-job.sh)**：创建Jenkins任务的功能
-- **[jenkins-trigger.sh](file:///home/william/repo/devops/jenkins-trigger.sh)**：触发Jenkins构建的功能n
-### 优化后的脚本统计
-
-| 文件 | 行数 | 说明 |
-|------|------|------|
-| [jenkins.sh](file:///home/william/repo/devops/jenkins.sh) | 5行 | 入口脚本，仅做跳转 |
-| [jenkins-main.sh](file:///home/william/repo/devops/jenkins-main.sh) | 25行 | 主控制器，处理命令行参数 |
-| [jenkins-common.sh](file:///home/william/repo/devops/jenkins-common.sh) | 18行 | 公共函数和配置加载 |
-| [jenkins-create-job.sh](file:///home/william/repo/devops/jenkins-create-job.sh) | 36行 | 创建Jenkins任务的功能 |
-| [jenkins-trigger.sh](file:///home/william/repo/devops/jenkins-trigger.sh) | 27行 | 触发Jenkins构建的功能 |
-
-### 脚本结构说明
-
-```
-jenkins.sh (5行) ----------------------> jenkins-main.sh (<30行)
-                                          |             
-                                          |             
-                                          ↓             ↓
-                                  jenkins-common.sh  jenkins-create-job.sh
-                                                        ↑
-                                                jenkins-trigger.sh
-```
-
-这种结构保持了代码的可维护性，同时将入口脚本压缩到极简状态。
-
-# Jenkins 自动化管理脚本
-
-本项目包含用于 Jenkins 自动化管理的脚本工具，能够重复生成任务并执行任务，使用 Jenkins CLI 实现。
-
-## 部署结构
-
+### 部署结构
 - `~/production/mfsapi`: 从 `~/repo/mfsapi` 部署
 - `~/production/mfsweb`: 从 `~/repo/mfsweb` 部署
 
-## 脚本说明
+### 部署脚本使用方法
+```bash
+# 部署mfsapi项目
+./deploy.sh mfsapi
 
-- `simple-jenkins-job.sh` - 创建最简单的 Jenkins 任务
-- `jenkins.sh` - 入口脚本，处理命令行参数和核心流程
-- `env-setup.sh` - 环境设置相关函数
-- `cli-utils.sh` - Jenkins CLI 相关的通用函数
-- `job-operations.sh` - 任务操作相关函数（创建任务、触发构建）
-
-## 使用方法
-
-### 创建最简单的 Jenkins 任务
-```
-./simple-jenkins-job.sh <项目名>
+# 部署mfsweb项目
+./deploy.sh mfsweb
 ```
 
-### 基本用法
-```
-./jenkins.sh <命令> [参数]
-```
+## 配置管理
 
-### 命令列表
+### config.sh - 公共配置文件
 
-| 命令        | 描述                  | 示例                  |
-|-------------|-----------------------|-----------------------|
-| create-job  | 创建 Jenkins 部署任务 | ./jenkins.sh create-job mfsapi |
-| trigger     | 触发项目构建          | ./jenkins.sh trigger mfsweb    |
-| version     | 显示 Jenkins 版本     | ./jenkins.sh version          |
-| help        | 显示帮助信息          | ./jenkins.sh help             |
-
-### 创建任务
-```
-./jenkins.sh create-job <项目名>
+```bash
+# Jenkins 连接配置
+JENKINS_URL="http://localhost:8080"
+JENKINS_USER="admin"
+JENKINS_TOKEN="your_api_token"
+JENKINS_CLI_PATH="~/jenkins-cli.jar"
 ```
 
-### 触发构建
+> 注意：该文件包含敏感信息，应妥善保管并设置适当的文件权限
+
+## 安全注意事项
+1. config.sh包含敏感信息，应设置适当的文件权限（建议600）
+2. 确保脚本文件具有适当的执行权限（建议755）
+3. 所有脚本都应包含必要的参数验证和错误处理机制
+4. 运行脚本的用户应遵循最小权限原则
+
+## 常见问题解决方案
+
+### 问题1：执行脚本时出现"权限拒绝"错误
+**解决方法**：确保脚本文件具有执行权限，使用以下命令设置权限：
+```bash
+chmod +x <脚本文件名>
 ```
-./jenkins.sh trigger <项目名>
-```
 
-## 配置说明
-
-在使用脚本前，请确保已正确配置以下文件：
-- `config.sh` - 包含 Jenkins 连接信息和认证凭据
-- `jenkins-cli.jar` - Jenkins CLI 工具
-
-## 依赖说明
-
-脚本依赖以下组件：
-- Jenkins CLI 工具 (jenkins-cli.jar)
-- Java 运行时环境
-- Bash shell
-
-## 注意事项
-
-1. 确保 Jenkins 服务正在运行
-2. 确保 Jenkins CLI 已正确配置
-3. 确保具有足够的权限执行相关操作
-4. 所有操作都将记录在 Jenkins 日志中
-
-## 许可证
-
-本项目采用 MIT 许可证。
+### 问题2：Jenkins连接失败
+**解决方法**：
+1. 检查Jenkins服务是否正在运行
+2. 验证config.sh中的JENKINS_URL配置是否正确
+3. 确认Jenkins用户凭据和API Token是否正确
