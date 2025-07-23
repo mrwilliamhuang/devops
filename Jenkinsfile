@@ -1,45 +1,29 @@
 pipeline {
     agent any
-    
-    environment {
-        // 从 config.sh 加载环境变量
-        CONFIG = "${SCRIPT_DIR}/config.sh"
-    }
-    
     parameters {
         choice(name: 'PROJECT', choices: ['mfsapi', 'mfsweb'], description: '选择要部署的项目')
     }
-    
     stages {
-        stage('Initialize') {
+        stage('执行部署脚本') {
             steps {
                 script {
-                    echo "初始化构建环境"
-                    // 设置脚本目录
-                    env.SCRIPT_DIR = "${SCRIPT_DIR}"
+                    if (params.PROJECT == 'mfsapi') {
+                        // 修正脚本名，执行 deploy_api.sh 脚本
+                        sh './deploy_api.sh'
+                    } else if (params.PROJECT == 'mfsweb') {
+                        // 执行 deploy_web.sh 脚本
+                        sh './deploy_web.sh'
+                    }
                 }
             }
         }
-        
-        stage('Build') {
-            steps {
-                echo "Building ${params.PROJECT}..."
-                // 这里可以添加构建步骤，如编译、测试等
-            }
+    }
+    post {
+        success {
+            echo "部署 ${params.PROJECT} 成功"
         }
-        
-        stage('Deploy') {
-            steps {
-                echo "Deploying ${params.PROJECT}..."
-                sh '${SCRIPT_DIR}/deploy.sh ${params.PROJECT}'
-            }
-        }
-        
-        stage('Post-Deploy') {
-            steps {
-                echo "构建和部署完成: ${params.PROJECT}"
-                // 这里可以添加部署后的操作，如通知、清理等
-            }
+        failure {
+            echo "部署 ${params.PROJECT} 失败"
         }
     }
 }
