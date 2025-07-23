@@ -12,7 +12,9 @@ cd "$PROJECT_DIR" || {
 
 # 执行 Angular 生产环境构建
 echo "正在执行 Angular 生产环境构建..."
-ng build -c production
+export NODE=/home/william/.nvm/versions/node/v22.16.0/bin/node
+export NG=/home/william/.nvm/versions/node/v22.16.0/bin/ng
+sudo $NODE $NG  build -c production
 BUILD_STATUS=$?
 if [ $BUILD_STATUS -ne 0 ]; then
     echo "Angular 构建失败，退出部署。"
@@ -25,7 +27,7 @@ mkdir -p "$TARGET_DIR"
 
 # 复制构建后的文件到目标目录
 echo "正在复制构建后的文件到 $TARGET_DIR ..."
-rsync -av --delete "$PROJECT_DIR/dist/studentscore/browser/" "$TARGET_DIR/"
+sudo rsync -av --delete "$PROJECT_DIR/dist/studentscore/browser/" "$TARGET_DIR/"
 COPY_STATUS=$?
 if [ $COPY_STATUS -ne 0 ]; then
     echo "文件复制失败，退出部署。"

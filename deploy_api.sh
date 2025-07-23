@@ -1,4 +1,10 @@
-#!/bin/bash
+#!/bin/bashecho "正在复制项目文件到 $TARGET_DIR ..."
+sudo rsync -av --delete --exclude="__pycache__" --exclude="docs" --exclude="*.md" --exclude="db" "$SOURCE_DIR/" "$TARGET_DIR/"
+if [ $? -ne 0 ]; then
+    echo "文件复制失败，退出部署。"
+    exit 1
+fi
+echo "文件复制完成。"
 
 # 定义源目录和目标目录
 SOURCE_DIR="../mfsapi"
@@ -14,13 +20,7 @@ fi
 mkdir -p "$TARGET_DIR"
 
 # 复制项目文件到目标目录
-echo "正在复制项目文件到 $TARGET_DIR ..."
-rsync -av --delete --exclude="__pycache__" --exclude="docs" --exclude="*.md" --exclude="db" "$SOURCE_DIR/" "$TARGET_DIR/"
-if [ $? -ne 0 ]; then
-    echo "文件复制失败，退出部署。"
-    exit 1
-fi
-echo "文件复制完成。"
+
 
 # 进入目标目录
 cd "$TARGET_DIR" || exit 1
